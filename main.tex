@@ -1,0 +1,198 @@
+\documentclass{article}
+\usepackage{graphicx} % Required for inserting images
+
+\usepackage{url}
+\title{Raport tehnic-ReadsProfiler}
+\author{Ursache Ana-Maria [2B1]}
+\date{Decembrie 2023}
+
+\begin{document}
+
+\maketitle
+
+\section{Introducere}
+\hspace{0.5cm}În cadrul proiectului ReadsProfiler, se realizează o platformă similară cu o bibliotecă online, în care clienții pot căuta anumite titluri de cărti sau autori, în care aceștia se pot interesa de anumite genuri și subgenuri existente, dar și descărca acele carți care sunt pe gustul lor.
+
+Prin intermediul acestui proiect doresc sa fac aceasta platformă de tip bibliotecă să fie un loc în care se poate căuta și descărca anumite cărți într-un mod usor, clar, ce nu impune probleme în utilizarea sa.
+
+Câteva beneficii relevante ale acestui proiect sunt din punct de vedere al timpului și al ușurinței nagivării prin diferitele informatii stocate, deoarece algoritmul în sine va oferi detalii clare și concise pentru fiecare operațiune posibilă la un anumit moment.
+\section{Tehnologii aplicate}
+\hspace{0.5cm}În cadrul acestei teme am decis să folosesc modelul client/server de tip TCP(Transmission Control Protocol). 
+
+Am ales această tehnologie pentru că, la acest proiect, este necesara asigurarea faptului că informatia este primită în întregime și în ordinea inițială, fără nicio pierdere, la trecerea de la client la server, sau invers, motiv pentru care conceptul de Three-way Handshake este unul esențial pentru buna implementare a proiectului ales.
+
+Spre deosebire de protocolul TCP pe care l-am ales, protocolul UDP(User Datagram Protocol) este de foarte mare ajutor în cazul în care este necesar multicasting-ul si broadcasting-ul, deoarce în aceste cazuri nu este nevoie să ne asigurăm că informația a fost trimisă și a fost primită în întregime.
+
+Prin alegerea protocolului TCP, imi voi asigura astfel transferarea corectă a informației și imi voi usura procesul de transmitere a mesajelor între client și server, sau invers.
+
+De asemenea, în cadrul acestui proiect am utilizat librăria SQLITE3, ce a trebuit inițial instalată, pentru stocarea informațiilor necesare, precum datele referitoare la cărți, la istoric, la utilizatorii conectați, la ierarhiile de genuri și subgenuri, la numele autorilor și genurile pe care la abordează în operele lor, dar  și la rating. Prin intermediul bazelor de date am reușit să rețin informația într-un mod eficient și bine structurat, motiv pentru care alegerea acestei tehnologii îmbunătățește utilizarea acestei aplicațîi client/server.
+
+Pe lângă această librărie pentru bazele de date, am mai folosit și librăria CURL pentru a putea clientul, cu ușurință, să descărcare o anumită carte care îi este pe plac.
+
+\section{Structura aplicației}
+\hspace{0.5cm}În cadrul proiectului am utilizat conceptul de meniu de opțiuni pentru a oferi oportunitatea de a fi o navigare ușoară în cadrul acestei platforme ce mimeaza o biblioteca online.
+
+Am folosit modelul client/server de tip TCP concurent și astfel am format $2$ documente: client.c(în care se va redirecționa ceea ce va scrie clientul) și server.c(în care serverul va identifica acele comenzi oferite de client și va intoarce rezultatul dorit).
+
+Funcționalități ale bibliotecii:
+\begin{itemize}
+    \item "Login: username"
+    \item "Căutare după gen: gen"(doar după "Login: username")
+    \item "Căutare după subgen: subgen"(doar după "Login: username" și după "Căutare după gen")
+    \item "Căutare după autor: autor"(doar după "Login: username")
+    \item "Căutare după titlu: titlu"(doar după "Login: username")
+    \item "Căutare după an: an"(doar după "Login: username")
+    \item "Căutare după ISBN: ISBN"(doar după "Login: username")
+    \item "Căutare după rating: rating"(doar după "Login: username")
+    \item "Istoric"(doar după "Login: username")
+    \item "Recomandări"(doar după "Login: username")
+    \item "Carti ce vor aparea curand" (doar după "Login: username")
+    \item "Descărcare: carte"(doar după "Login: username")
+    \item "Afisare"(doar după "Login: username")
+    \item "Tabela"(doar după "Login: username")
+    \item "Rating"(doar după "Login: username" și după "Descărcare")
+    \item "Quit"
+    \item Va fi posibilă și verificarea comenzii(dacă nu este scrisă una din cele de mai sus, se va afișa un mesaj ce indică acest lucru)
+\end{itemize}
+\clearpage
+Diagrama ce arată modul în care se va putea naviga în cadrul bibliotecii:
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1\linewidth]{diag1.png}
+    \caption{Diagrama 1}
+    \label{fig:enter-label}
+\end{figure}
+\clearpage
+Modelul client/server de tip TCP concurent 
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.5\linewidth]{p2.png}
+    \caption{Diagrama 2}
+    \label{fig:enter-label}
+\end{figure}
+
+\section{Aspecte de implementare}
+\hspace{0.5cm}În cadrul acestei secțiuni voi expune anumite porțiuni de cod ce ajută ca implementarea algoritmului să fie eficientă.
+
+Pentru a putea sincroniza cu ușurință utilizarea comenzilor, am folosit $3$ mapări diferite. 
+\begin{itemize}
+    \item $login_val$: prin care mă asigur că utilizatorul este logat înainte de a putea folosi alte comenzi;
+    \item $gen_val$: prin care mă asigur că utilizatorul poate cauta un subgen doar dacă acesta a căutat anterior un gen;
+    \item $descarcare_val$: prin care mă asigur că utilizatorul poate da rating la experiența sa/ la cartea descărcată, abia după ce a descărcat o carte.
+\end{itemize}
+
+Modul în care le-am inițializat: acestea au fost folosite sub forma unui OK(OK1, OK2, OK3) și au avut doar valoarea 0, inițial, și, mai apoi, 1.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.75\linewidth]{Mapari.png}
+    \caption{Inițializare}
+    \label{fig:enter-label}
+\end{figure}
+\clearpage
+Modul în care le-am utilizat: 
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1\linewidth]{Mod-de-folosire.png}
+    \caption{Folosire mapări}
+    \label{fig:enter-label}
+\end{figure}
+\clearpage
+Modul în care le-am folosit în cadrul fork-ului din loop-ul inițial:
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.75\linewidth]{Fork.png}
+    \caption{Loop}
+    \label{fig:enter-label}
+\end{figure}
+\clearpage
+Modul în care le-am închis pentru a mă asigura că nu intervin probleme: 
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.75\linewidth]{Screenshot from 2023-12-15 12-31-06.png}
+    \caption{Inchidere mapări}
+    \label{fig:enter-label}
+\end{figure}
+
+În cadrul funcției de Login, în timp ce se folosește această comandă, numele utilizatorului se retine în baza de date.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1\linewidth]{login.pdf}
+    \caption{Login}
+    \label{fig:enter-label}
+\end{figure}
+
+\clearpage
+
+În cadrul funcției de de Descărcare, prin faptul că în comanda clientul vă introduce un nume, vă face să se descarce automat cartea cu acel nume.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1\linewidth]{Desc.png}
+    \caption{Descărcare-cărți}
+    \label{fig:enter-label}
+\end{figure}
+
+Tabela principală în care vom retine informațiile legate de cărți:
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1\linewidth]{tabela_carti.png}
+    \caption{Tabelă-cărți}
+    \label{fig:enter-label}
+\end{figure}
+
+\clearpage
+
+Afișare recomandărilor în funcție de cărțile pe care acel ușer deja le-a căutat și instalat: 
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1\linewidth]{recomandari.png}
+    \caption{Recomandări}
+    \label{fig:enter-label}
+\end{figure}
+\clearpage
+
+Modul în care se afișează conținutul unei tabele:
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.75\linewidth]{afisare_tabela.png}
+    \caption{Afișare-conținut-tabela}
+    \label{fig:enter-label}
+\end{figure}
+
+
+
+În cadrul funcției de afișare, se acutalizeaza și istoricul cu ultima comandă de căutare pe care a introdus-o clientul: 
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1\linewidth]{actualizare_istoric.png}
+    \caption{Actualizare-istoric}
+    \label{fig:enter-label}
+\end{figure}
+
+În cadrul funcției de descărcare, se acutalizeaza și istoricul cu această carte pe care acesta a descărcat-o: 
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1\linewidth]{actualizaare_istoric_la_desc.png}
+    \caption{Actualizare-istoric-descărcare}
+    \label{fig:enter-label}
+\end{figure}
+
+\section{Concluzii}
+    \hspace{0.5cm}Prin intermediul acestui proiect se poate vedea modul în care se poate face o platforma dupa modelul client/server de tip TCP concurent, dar, totodata, arată și modul în care se poate folosi o biblioteca online.
+    
+    Unele lucruri ce ar aduce un plus acestui proiect ar fi:
+\begin{itemize}
+    \item formarea unei interfațe grafice ce va îmbunătăți modul în care se navigheaza în cadrul bibliotecii, deoarece va fi mai mult o activitate vizuală și nu ar mai implica scrierea în terminal, scriere ce poate fi putin complicată pentru unii utilizatori;
+    \item asigurarea siguranței userului în momentul navigarii, prin implementarea unei metode ce impune securitatea clienților;
+    \item utilizarea firelor de execuție/threads pentru o mai bună eficiență a codului.
+\end{itemize}
+\section{Referințe bibliografice}
+\hspace{0.5cm}1. \url{https://profs.info.uaic.ro/~computernetworks/files/5rc_ProgramareaInReteaI_ro.pdf }
+
+2. \url{https://profs.info.uaic.ro/~computernetworks/files/6rc_ProgramareaInReteaII_Ro.pdf}
+
+3. \url{https://profs.info.uaic.ro/~computernetworks/files/7rc_ProgramareaInReteaIII_Ro.pdf}
+
+4. \url{https://docs.google.com/presentation/d/1reUzYxEYVd1WjqvNNy-wKNurJsS57_Oxn7ciMss6KU8/edit#slide=id.g29c6eba0386_0_5a}
+
+
+\end{document}

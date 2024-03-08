@@ -1,0 +1,18 @@
+gcc -Wall server.c -o server -lsqlite3
+gcc -Wall client.c -o client -lcurl
+
+./client 0 6500
+
+cautare
+
+afisare
+
+recomandari
+
+descarcare
+
+rating
+
+carti viitoare
+
+tabela
